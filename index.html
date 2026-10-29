@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Invoice Generator</title>
+  <link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+  <!-- ================= TOPBAR NAVBAR ================= -->
+<!-- ================= TOPBAR NAVBAR ================= -->
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="#" class="brand">
+      <div class="brand-icon">📄</div>
+      <div class="brand-info">
+        <span class="brand-name">Invoify</span>
+        <span class="brand-tag">Generator</span>
+      </div>
+    </a>
+    
+    <!-- Status Pill with Modal Trigger Buttons -->
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      <div class="status-actions">
+        <button type="button" id="draft-btn">Draft Saved</button>
+        <span class="separator">|</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <button class="btn btn-secondary">
+      👁 <span id="previewBtnText">Full Preview</span>
+    </button>
+    <button class="btn btn-primary" id="Pdfdownload">
+      📥 Download / Print PDF
+    </button>
+  </div>
+</header>
+
+<!-- ================= SKETCH MATCHED SAVED DRAFTS POPUP MODAL ================= -->
+<div class="modal-overlay" id="savedModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Saved Drafts / Invoices</h3>
+      <button class="close-x" id="closeModalBtn">✕</button>
+    </div>
+
+    <div class="modal-body" id="modal-body">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary full-btn" id="closeModalFooterBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- ================= MAIN WORKSPACE ================= -->
+  
+  <main class="page">
+    <div class="workspace">
+      
+      <!-- LEFT COLUMN: INPUT EDITOR FORM -->
+      <section class="editor-panel panel">
+        <div class="panel-heading">
+          <h2>Invoice Details</h2>
+          <p>Fill in the required billing and product information</p>
+        </div>
+
+        <div class="panel-body">
+          <form id="formPage_data">
+          <!-- SECTION 1: OWNER / YOUR BUSINESS DETAILS -->
+          <div class="section">
+            <div class="section-title">
+              <span class="section-number">1</span>
+              <span>Your Details (Owner)</span>
+            </div>
+          
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>Business / Owner Name</label>
+                <input type="text" placeholder="e.g. Acme Tech Solutions"id="ownerName">
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" placeholder="+91 98765 43210"id="ownerNumber"minlength="10"maxlength="10">
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="owner@acmetech.com"id="ownerEmail">
+              </div>
+              <div class="form-group full-width">
+                <label>Address</label>
+                <textarea rows="2" placeholder="Street Address, City, State, Pincode" id="ownerAddress"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: BILLING / CLIENT DETAILS -->
+          <div class="section">
+            <div class="section-title">
+              <span class="section-number">2</span>
+              <span>Billed To (Client)</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>Client Name / Company</label>
+                <input type="text" placeholder="e.g. John Doe"id="clientName">
+              </div>
+              <div class="form-group">
+                <label>Client Phone Number</label>
+                <input type="tel" placeholder="+91 91234 56789"required="required"id="cl-number"minlength="10"maxlength="10">
+              </div>
+              <div class="form-group">
+                <label>Client Email</label>
+                <input type="email" placeholder="john@example.com"required="required"id="cl-email">
+              </div>
+              <div class="form-group full-width">
+                <label>Billing Address</label>
+                <textarea rows="2" placeholder="Client Street Address, City, State"required="required" id="add-client"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: INVOICE META & DATES -->
+          <div class="section">
+            <div class="section-title">
+              <span class="section-number">3</span>
+              <span>Invoice Info</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Invoice Number</label>
+                <input type="text" value="#INV-2026-001"id="id-num">
+              </div>
+              <div class="form-group">
+                <label>Invoice Date</label>
+                <input type="date"required="required"id="invoice-date">
+              </div>
+              <div class="form-group">
+                <label>Due Date</label>
+                <input type="date"id="in-due">
+              </div>
+              <div class="form-group">
+                <label>Payment Method</label>
+                <select id="pay-methods">
+                  <option value="Upi">UPI / QR Code</option>
+                  <option value="Bank">Bank Transfer</option>
+                  <option value="Cash">Cash</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 4: PRODUCTS & SERVICES TABLE -->
+          <div class="section">
+            <div class="section-title">
+              <span class="section-number">4</span>
+              <span>Products / Items</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40%;">Item Description</th>
+                    <th>Qty</th>
+                    <th>Price (₹)</th>
+                    <th>Total (₹)</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="text" value="Web Design & Development"required="required" id="item-discript"></td>
+                    <td><input type="number" value="1" style="width: 60px;"id="it-qty"></td>
+                    <td><input type="number"required="required"id="pay-price"class="price-tag"></td>
+                    <td><strong id="showPrice">₹15,000</strong></td>
+                    <td><button class="btn-icon danger"id="removeBtn"type="button">✕</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button class="btn btn-submit" style="margin-top: 12px;"type="submit">+ Add Product</button>
+            <button type="button"id="draft-saved"class="btn draft-saved">Save Draft</button>
+          </div>
+</form>
+          <!-- SECTION 5: TOTAL CALCULATIONS -->
+          <div class="section">
+            <div class="summary-box"id="showItems">
+              <div class="summary-row">
+                <span>Subtotal</span>
+                <strong id="total">₹15,000.00</strong>
+              </div>
+              <div class="summary-row">
+                <span>Tax / GST (18%)</span>
+                <strong id="gst">₹2,700.00</strong>
+              </div>
+              <div class="summary-row grand-total">
+                <span>Grand Total</span>
+                <strong id="final">₹17,700.00</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: LIVE INVOICE PREVIEW -->
+      <section class="preview-panel panel" id="showPaper">
+        <div class="panel-heading no-print">
+          <h3>Invoice Live Preview</h3>
+          <span class="badge">A4 Sheet View</span>
+        </div>
+
+        <div class="invoice-paper">
+             <div class="top">
+          <div class="invoice-header">
+            <div>
+              <h1>INVOICE</h1>
+              <p>Invoice No: <strong id="main-id">#INV-2026-001</strong></p>
+            </div>
+            <div class="invoice-label">ORIGINAL</div>
+          </div>
+
+          <div class="invoice-details">
+  <div>
+    <h4>Billed From (Owner)</h4>
+
+    <p>
+      <strong>
+        <span id="owner-name">Acme Tech Solutions</span>
+      </strong>
+    </p>
+
+    <p>
+      <i class="fa-solid fa-phone"></i>
+      <span id="owner-mobile">+91 98765 43210</span>
+    </p>
+
+    <p>
+      <i class="fa-solid fa-envelope"></i>
+      <span id="owner-email">owner@acmetech.com</span>
+    </p>
+
+    <p>
+      <i class="fa-solid fa-location-dot"></i>
+      <span id="owner-address">MG Road, Bengaluru, KA</span>
+    </p>
+  </div>
+
+  <div>
+    <h4>Billed To (Client)</h4>
+
+    <p>
+      <strong>
+        <span id="client-name">John Doe</span>
+      </strong>
+    </p>
+
+    <p>
+      <i class="fa-solid fa-phone"></i>
+      <span id="client-mobile">+91 98765 43210</span>
+    </p>
+
+    <p>
+      <i class="fa-solid fa-envelope"></i>
+      <span id="client-email">john@example.com</span>
+    </p>
+
+    <p>
+      <i class="fa-solid fa-location-dot"></i>
+      <span id="client-address">Sector 62, Noida, UP</span>
+    </p>
+  </div>
+</div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="tableId">
+              <tr>
+                <td>Web Design & Development</td>
+                <td>1</td>
+                <td>₹15,000.00</td>
+                <td>₹15,000.00</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="invoice-summary"id="showOnthers">
+            <div class="summary-row">
+              <span>Subtotal:</span>
+              <strong>₹15,000.00</strong>
+            </div>
+            <div class="summary-row">
+              <span>GST (18%):</span>
+              <strong>₹2,700.00</strong>
+            </div>
+            <div class="summary-row grand-total">
+              <span>Total Due:</span>
+              <strong>₹17,700.00</strong>
+            </div>
+          </div>
+
+          <div class="invoice-footer">
+            <p>Thank you for your business!</p>
+            <p><small>Terms: Payment due within 15 days from date of issue.</small></p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+  <div class="invoice-modal-overlay"id="box-popup">
+  <div class="invoice-modal-box" id="main-boxPopup">wgwgewwe</div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
